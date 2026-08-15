@@ -16,6 +16,7 @@ from .matcher import Matcher
 from .mouse import get_displays, get_mouse_pos, locate
 from .obs_client import ObsClient
 from .zoom import compute_transform, apply_deadzone, smooth, Transform
+from . import os_zoom
 
 
 class ZoomController(threading.Thread):
@@ -207,8 +208,8 @@ def main(args) -> None:
     # Get displays for mouse tracking (needed in both normal and dry-run modes)
     displays = get_displays()
 
-    # Setup OBS and canvas info
-    if not args.dry_run:
+    # Setup OBS and canvas info（--os 模式走系統縮放，不需要 OBS）
+    if not args.dry_run and not args.os:
         obs = ObsClient(cfg.obs.host, cfg.obs.port, cfg.obs.password)
         try:
             obs.connect()
@@ -241,10 +242,12 @@ def main(args) -> None:
     matcher = Matcher(cfg.commands)
 
     # Start zoom controller
-    controller = ZoomController(
-        obs, item, orig, canvas, src, cfg.zoom, displays, args.dry_run
-    )
-    controller.start()
+    controller = None
+    if not args.os:
+        controller = ZoomController(
+            obs, item, orig, canvas, src, cfg.zoom, displays, args.dry_run
+        )
+        controller.start()
 
     # Setup audio input
     audio_queue: queue.Queue[np.ndarray] = queue.Queue()
@@ -295,7 +298,17 @@ def main(args) -> None:
                 if action:
                     print()  # newline before trigger
                     print(f"[TRIGGER] {action}")
-                    controller.handle(action)
+                    if args.os:
+                        if args.dry_run:
+                            print(f"[OS-ZOOM] {action} (dry-run, 不送出按鍵)")
+                        elif action == "zoom_in":
+                            os_zoom.zoom_in(target=cfg.zoom.os_level)
+                            print(f"[OS-ZOOM] in → {cfg.zoom.os_level}x")
+                        else:
+                            os_zoom.zoom_out()
+                            print("[OS-ZOOM] out")
+                    else:
+                        controller.handle(action)
 
                 # Reset on endpoint
                 if endpoint:
@@ -306,7 +319,8 @@ def main(args) -> None:
     except KeyboardInterrupt:
         pass
     finally:
-        controller.stop()
+        if controller is not None:
+            controller.stop()
         print("bye")
 
 
@@ -323,6 +337,12 @@ def cli() -> None:
         "--dry-run",
         action="store_true",
         help="Print transforms instead of sending to OBS",
+    )
+    parser.add_argument(
+        "--os",
+        action="store_true",
+        help="用真 macOS 螢幕縮放（輔助使用 Zoom）取代 OBS transform 縮放；"
+             "同一組語音詞，需開啟「使用鍵盤快速鍵來縮放」與終端機輔助使用權限",
     )
     parser.add_argument(
         "--list-devices",
