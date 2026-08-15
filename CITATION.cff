@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "obs-voice-command: Voice-commanded zoom-to-mouse for OBS on macOS"
+version: 0.1.0
+date-released: "2026-08-14"
+url: "https://github.com/htlin222/obs-voice-command"
+repository-code: "https://github.com/htlin222/obs-voice-command"
+license: MIT
+authors:
+  - family-names: "Lin"
+    given-names: "Hsieh-Ting"
+    orcid: "https://orcid.org/0009-0002-3974-4528"
+keywords:
+  - obs
+  - speech-recognition
+  - voice-command
+  - streaming
+  - sherpa-onnx
+  - macos
+abstract: >-
+  A macOS daemon that controls OBS zoom-to-mouse with Chinese voice commands,
+  using local streaming ASR (sherpa-onnx) and obs-websocket.

@@ -1,0 +1,22 @@
+[obs]
+host = "localhost"
+port = 4455
+password = ""
+scene = ""          # 空 = 自動偵測目前 program scene
+source = ""         # 空 = 自動找第一個 display capture source
+
+[zoom]
+level = 2.0         # 縮放倍率
+deadzone = 0.15     # 滑鼠死區（可視範圍比例），內部移動不觸發追蹤
+smoothing = 0.12    # 緩動係數（越大追越快）
+
+[audio]
+device = ""         # 空 = 系統預設麥克風（--list-devices 查名稱）
+
+[[commands]]
+phrases = ["來個特寫", "放大一點"]
+action = "zoom_in"
+
+[[commands]]
+phrases = ["退回全畫面", "退出特寫", "退出", "拉遠"]
+action = "zoom_out"
