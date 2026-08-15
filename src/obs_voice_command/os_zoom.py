@@ -5,8 +5,9 @@
 
 機制：鍵盤縮放是在 far point (1x) 與 near point 之間切換，
 跳躍目標存於 closeViewNearPoint（寫入即時生效，經實測）。
-zoom_in = 先把 near point 寫成目標倍率，再按一下 Opt+Cmd+=，
-macOS 用原生平滑動畫直接躍到目標；zoom_out = Opt+Cmd+8 動畫退回。
+兩個方向都用 Opt+Cmd+8（toggle）觸發：toggle 帶平滑過場動畫，
+而 Opt+Cmd+= 是步進鍵、瞬跳無動畫。zoom_in = 先把 near point 寫成
+目標倍率再 toggle；zoom_out = 再 toggle 一次。
 目前縮放狀態可從 closeViewZoomedIn 讀取（idle 時準確）。
 """
 import subprocess
@@ -43,13 +44,13 @@ def is_zoomed() -> bool:
 
 
 def zoom_in(target: float = 1.5) -> None:
-    """設定 near point 後單按 +，原生動畫躍到 target。已縮放則冪等跳過。"""
+    """設定 near point 後按 toggle，平滑動畫躍到 target。已縮放則冪等跳過。"""
     if is_zoomed():
         return
     for key in ("closeViewNearPoint", "closeViewDesiredZoomFactor"):
         subprocess.run(["defaults", "write", _DOMAIN, key, "-float", str(target)])
     time.sleep(0.2)  # 等 cfprefs 落盤
-    _key(_KEY_EQUAL)
+    _key(_KEY_TOGGLE)
 
 
 def zoom_out() -> None:

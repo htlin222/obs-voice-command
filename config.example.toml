@@ -7,7 +7,7 @@ source = ""         # 空 = 自動找第一個 display capture source
 
 [zoom]
 level = 2.0         # OBS 縮放倍率
-os_level = 1.5      # --os 模式（真 macOS 縮放）的倍率，全螢幕體感較強建議偏小
+os_level = 2.0      # --os 模式（真 macOS 縮放）的倍率；全螢幕體感較強，嫌大可調 1.5
 deadzone = 0.15     # 滑鼠死區（可視範圍比例），內部移動不觸發追蹤
 smoothing = 0.12    # 緩動係數（越大追越快）
 
