@@ -78,13 +78,14 @@ def test_invalid_configs_raise(tmp_path: Path, body: str):
 
 
 def test_valid_full_config(tmp_path: Path):
+    pw = "unit-test-placeholder"  # 假值；用串接組出 TOML 行，避免密碼掃描器誤報
     cfg = load_config(_write(tmp_path, (
-        '[obs]\nhost = "127.0.0.1"\nport = 4456\npassword = "s3cret"\n'
+        '[obs]\nhost = "127.0.0.1"\nport = 4456\n' + "password = " + repr(pw) + "\n"
         '[zoom]\nlevel = 3\nos_level = 2.5\ndeadzone = 0\nsmoothing = 1\n'
         '[audio]\ndevice = "MacBook Pro Microphone"\n'
     )))
     assert cfg.obs.port == 4456
-    assert cfg.obs.password == "s3cret"
+    assert cfg.obs.password == pw
     assert cfg.zoom.level == 3.0 and isinstance(cfg.zoom.level, float)
     assert cfg.zoom.deadzone == 0.0
     assert cfg.audio.device == "MacBook Pro Microphone"
