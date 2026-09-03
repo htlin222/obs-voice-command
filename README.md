@@ -21,14 +21,14 @@ cd obs-voice-command
 uv sync
 ```
 
-首次執行時，ASR 模型會自動下載到 `~/.cache/obs-voice-command/`（約 488MB），之後不需重複下載。
+首次執行時，ASR 模型會自動下載到 `~/.cache/obs-voice-command/`（約 488MB），之後不需重複下載。下載後會比對 SHA-256 校驗碼，不符即拒用並刪除；解壓只接受模型目錄內的一般檔案，不會寫到快取目錄以外。
 
 ## OBS 設定
 
 1. 開啟 OBS
 2. 前往 **工具 → WebSocket 伺服器設定**
 3. 勾選 **啟用 WebSocket server**
-4. 如果設了伺服器密碼，將密碼複製到本專案的 `config.toml` 的 `[obs]` 區塊內 `password` 欄位
+4. 如果設了伺服器密碼，將密碼複製到本專案的 `config.toml` 的 `[obs]` 區塊內 `password` 欄位（該檔已在 `.gitignore`；建議 `chmod 600 config.toml`，若其他使用者可讀程式啟動時會提醒）
 
 ## 快速開始
 

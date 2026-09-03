@@ -1,82 +1,41 @@
 """Streaming ASR using sherpa-onnx with bilingual Chinese-English model."""
 
 import importlib.util
-import tarfile
-import urllib.request
 from pathlib import Path
+
+from .model import CACHE_DIR, MODEL_SUBDIR, MODEL_URL, ModelError, ensure_model  # noqa: F401
 
 
 def _ensure_onnxruntime_dylib() -> None:
     """sherpa-onnx 1.13.x macOS wheel 漏包 libonnxruntime.dylib（上游打包 bug）；
-    缺少時從 onnxruntime 套件 symlink 過去。"""
-    spec = importlib.util.find_spec("sherpa_onnx")
-    if spec is None or not spec.submodule_search_locations:
-        return
-    lib_dir = Path(spec.submodule_search_locations[0]) / "lib"
-    link = lib_dir / "libonnxruntime.dylib"
-    if link.exists():
-        return
-    ort_spec = importlib.util.find_spec("onnxruntime")
-    if ort_spec is None or not ort_spec.submodule_search_locations:
-        return
-    capi = Path(ort_spec.submodule_search_locations[0]) / "capi"
-    for dylib in sorted(capi.glob("libonnxruntime.*.dylib")):
-        link.symlink_to(dylib)
+    缺少時從 onnxruntime 套件 symlink 過去。任何檔案系統錯誤都不致命，
+    留給 import sherpa_onnx 自己報錯。"""
+    try:
+        spec = importlib.util.find_spec("sherpa_onnx")
+        if spec is None or not spec.submodule_search_locations:
+            return
+        lib_dir = Path(spec.submodule_search_locations[0]) / "lib"
+        link = lib_dir / "libonnxruntime.dylib"
+        if link.is_symlink() and not link.exists():
+            link.unlink()  # 壞掉的 symlink（例如 onnxruntime 升級後）重建
+        if link.exists():
+            return
+        ort_spec = importlib.util.find_spec("onnxruntime")
+        if ort_spec is None or not ort_spec.submodule_search_locations:
+            return
+        capi = Path(ort_spec.submodule_search_locations[0]) / "capi"
+        for dylib in sorted(capi.glob("libonnxruntime.*.dylib")):
+            link.symlink_to(dylib)
+            return
+    except (OSError, ValueError):
         return
 
 
 _ensure_onnxruntime_dylib()
 
-import numpy as np
+import numpy as np  # noqa: E402
 import sherpa_onnx  # noqa: E402
 from opencc import OpenCC  # noqa: E402
-
-MODEL_URL = (
-    "https://github.com/k2-fsa/sherpa-onnx/releases/download/"
-    "asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2"
-)
-CACHE_DIR = Path.home() / ".cache" / "obs-voice-command"
-MODEL_SUBDIR = "sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20"
-
-
-def ensure_model() -> Path:
-    """Ensure model is downloaded and extracted. Returns path to model directory."""
-    model_dir = CACHE_DIR / MODEL_SUBDIR
-
-    # If model already exists and contains tokens.txt, return it
-    if model_dir.exists() and (model_dir / "tokens.txt").exists():
-        return model_dir
-
-    # Create cache directory
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-
-    # Download model
-    tar_path = CACHE_DIR / (MODEL_SUBDIR + ".tar.bz2")
-
-    def download_with_progress(url: str, dest: Path) -> None:
-        """Download with simple progress output."""
-        print(f"Downloading {url} ...")
-
-        def reporthook(block_num: int, block_size: int, total_size: int) -> None:
-            downloaded = min(block_num * block_size, total_size)
-            total_mb = total_size / (1024 * 1024)
-            downloaded_mb = downloaded / (1024 * 1024)
-            if total_size > 0:
-                percent = (downloaded / total_size) * 100
-                print(f"  {downloaded_mb:.1f} MB / {total_mb:.1f} MB ({percent:.1f}%)", end="\r")
-
-        urllib.request.urlretrieve(url, str(dest), reporthook)
-        print()  # newline after progress
-
-    download_with_progress(MODEL_URL, tar_path)
-
-    # Extract tarball
-    print(f"Extracting to {CACHE_DIR} ...")
-    with tarfile.open(str(tar_path), "r:bz2") as tar:
-        tar.extractall(str(CACHE_DIR))
-
-    print(f"Model ready at {model_dir}")
-    return model_dir
 
 
 class Asr:

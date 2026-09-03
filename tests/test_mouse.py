@@ -83,3 +83,14 @@ def test_locate_boundary_point():
     assert display == main
     assert px == 0.0
     assert py == 0.0
+
+
+def test_locate_skips_degenerate_display():
+    """寬或高為 0 的顯示器資訊不可造成除以零，應被跳過。"""
+    broken = DisplayInfo(origin_x=0.0, origin_y=0.0, width_pts=0.0, height_pts=0.0,
+                         width_px=0, height_px=0)
+    ok = DisplayInfo(origin_x=0.0, origin_y=0.0, width_pts=100.0, height_pts=100.0,
+                     width_px=200, height_px=200)
+    result = locate((10.0, 10.0), [broken, ok])
+    assert result is not None
+    assert result[0] == ok and result[1] == 20.0

@@ -22,6 +22,8 @@ def get_displays() -> list[DisplayInfo]:
     Uses Quartz global coordinates (top-left origin, y-down) to match get_mouse_pos().
     """
     err, ids, count = Quartz.CGGetActiveDisplayList(16, None, None)
+    if err != 0 or not ids:
+        return []
     displays = []
     for did in ids[:count]:
         b = Quartz.CGDisplayBounds(did)
@@ -56,6 +58,8 @@ def locate(
     x, y = pos
 
     for display in displays:
+        if display.width_pts <= 0 or display.height_pts <= 0:
+            continue  # 異常顯示器資訊，跳過以免除以零
         x_in_bounds = display.origin_x <= x < display.origin_x + display.width_pts
         y_in_bounds = display.origin_y <= y < display.origin_y + display.height_pts
 
