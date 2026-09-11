@@ -48,3 +48,9 @@ def test_smooth_converges():
 
 def test_smooth_snaps_when_close():
     assert smooth(99.999, 100.0, 0.12) == 100.0   # 距離 < 0.01 直接貼齊
+
+
+def test_deadzone_zero_distance_no_divzero():
+    # 滑鼠正好在中心且 radius 為 0 或負：不可除以零
+    assert apply_deadzone(cx=10.0, cy=10.0, mx=10.0, my=10.0, radius=0.0) == (10.0, 10.0)
+    assert apply_deadzone(cx=10.0, cy=10.0, mx=10.0, my=10.0, radius=-5.0) == (10.0, 10.0)

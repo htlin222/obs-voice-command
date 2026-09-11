@@ -44,7 +44,7 @@ def apply_deadzone(
     在外 → 中心沿連線移到距滑鼠 radius 處（畫面追上但不過衝）。"""
     dx, dy = mx - cx, my - cy
     dist = math.hypot(dx, dy)
-    if dist <= radius:
+    if dist == 0.0 or dist <= radius:  # dist==0 另外擋，避免 radius<0 時除以零
         return cx, cy
     k = (dist - radius) / dist
     return cx + dx * k, cy + dy * k
